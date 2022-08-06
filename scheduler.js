@@ -6,7 +6,7 @@ const testAbi = require('./abi/TrigMyContractTest.json');
 
 let provider;
 let wallet;
-
+let lastNonce;
 
 ///////////////// Escape button to stop the script ////////////////
 readline.emitKeypressEvents(process.stdin);
@@ -55,9 +55,13 @@ const go = async function(){
     //console.log(allTrigs);
     let first= true;
 
-    for(let i=0;i< allTrigs.length; i++){
-        const result= await tryToTrigger(allTrigs[i]);
+    lastNonce = await wallet.getTransactionCount();    
+    console.log("nonce");
+    console.log(lastNonce);
+   
 
+    for(let i=0;i< allTrigs.length; i++){
+       await tryToTrigger(allTrigs[i]);
     }
        
        
@@ -103,9 +107,9 @@ const tryToTrigger = async (trig)=>{
         console.log(nextTick);
         console.log (Date.now());
        
-       
         if ( nextTick < Date.now() ||trig.lastTick == 0 ){
-              await tick(trig);
+           
+            await tick(trig);           
         }
 };
 
@@ -120,24 +124,25 @@ const tick = async (trig)=>{
                 "type": "function"
             }
         ];
- 
+    
     console.log(abi);
     const contractToCall = new ethers.Contract(trig.contractToCall, abi ,provider);
-
-    //const contractToCallSigned =  contractToCall.connect(wallet);
     const action = trig.functionToCall;
-    var options = { gasPrice: 6000000000,gasLimit: 30000000 , nonce: await wallet.getTransactionCount()};
+    //const contractToCallSigned =  contractToCall.connect(wallet);
+   
+    var options = { gasPrice: 6000000000,gasLimit: 30000000 , nonce:lastNonce++};
 
     const unsignedTx= await contractToCall.populateTransaction[action](options);
     
   
-    const tx= await wallet.sendTransaction(unsignedTx);
-
-
+    wallet.sendTransaction(unsignedTx);
+   
+    console.log("nonce2");  
+    console.log(lastNonce);
     //const tx= await contractToCallSigned.toCall({gasLimit:3000000});
-    const res= await tx.wait();
+   // const res= await tx.wait();
 
-    console.log(res);
+    //console.log(res);
     
     // call trig.tocall contract and function
 
