@@ -27,8 +27,11 @@ provider =  new ethers.providers.JsonRpcProvider(NODE_ENDPOINT);
 
 const go = async function(){
 
-   prepareWallets();
-   console.log(testAbi);
+   await prepareWallets();
+  // console.log(testAbi);
+
+  
+
    /*const tttt= "toCall";
    const abii= [
 	
@@ -51,6 +54,8 @@ const go = async function(){
     console.log(res);
     */
     
+
+    
     const allTrigs = await firebaseLib.getAllTriggers();
     //console.log(allTrigs);
     let first= true;
@@ -59,7 +64,7 @@ const go = async function(){
     console.log("nonce");
     console.log(lastNonce);
    
-
+    console.log(allTrigs.length);
     for(let i=0;i< allTrigs.length; i++){
        await tryToTrigger(allTrigs[i]);
     }
@@ -71,8 +76,8 @@ const go = async function(){
        
             const result= tryToTrigger(trig);
        
-    })
-    */
+    })*/
+    
 }
 
 go();
@@ -81,6 +86,9 @@ const tryToTrigger = async (trig)=>{
         // next trig<now
         let intervalTimeStamp;
         switch(trig.interval){
+            case "every minute":
+                intervalTimeStamp = 60;
+                
             case "hourly":
                 intervalTimeStamp = 3600;
                 break;
@@ -107,14 +115,18 @@ const tryToTrigger = async (trig)=>{
         console.log(nextTick);
         console.log (Date.now());
        
-        if ( nextTick < Date.now() ||trig.lastTick == 0 ){
+        if ( nextTick < Date.now() || trig.lastTick == 0 ){
            
             await tick(trig);           
         }
 };
 
 const tick = async (trig)=>{
-    
+    console.log(trig.maker);
+    const TMCwallet = await firebaseLib.getTMCWallet(trig.maker);
+    console.log('wallet')
+    console.log(TMCwallet);
+
     const abi= [     
             {
                 "inputs": [],
@@ -130,17 +142,28 @@ const tick = async (trig)=>{
     const action = trig.functionToCall;
     //const contractToCallSigned =  contractToCall.connect(wallet);
    
-    var options = { gasPrice: 6000000000,gasLimit: 30000000 , nonce:lastNonce++};
+    //var options = { gasPrice: 3000000000,gasLimit: 2000000 , nonce:lastNonce++};
+    var options = {  nonce:lastNonce++};
 
-    const unsignedTx= await contractToCall.populateTransaction[action](options);
-    
   
+    const unsignedTx= await contractToCall.populateTransaction[action](options);
+    console.log("unsignedTx");  
+    console.log(unsignedTx); 
+    /* const estGas = await provider.estimateGas({
+        from: wallet.address,
+        to: unsignedTx.to,
+        data: unsignedTx.data,
+        gasPrice: provider.getGasPrice(),
+      }) 
+   */
     wallet.sendTransaction(unsignedTx);
    
     console.log("nonce2");  
     console.log(lastNonce);
+   // console.log(estGas.toNumber());
+
     //const tx= await contractToCallSigned.toCall({gasLimit:3000000});
-   // const res= await tx.wait();
+    // const res= await tx.wait();
 
     //console.log(res);
     

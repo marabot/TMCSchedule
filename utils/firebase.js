@@ -21,7 +21,7 @@ const db = firestore.getFirestore(app);
 
 async function getAllTriggers() {
     const tabReturn = [];
-    const docs = await firestore.getDocs(firestore.collection(db, "users"));   
+    const docs = await firestore.getDocs(firestore.collection(db, "triggers"));   
 
     docs.forEach((doc) => {
         const datas= doc.data();
@@ -40,6 +40,13 @@ async function getAllTriggers() {
             );   
         });    
     return tabReturn;
+}
+
+async function getTMCWallet(userAddress){
+    const docRef = firestore.doc(db, "accounts", userAddress);  
+    const docSnap = await firestore.getDoc(docRef);
+
+    return docSnap.data().walletTMC;
 }
 
  async function getTriggerByAddrFrom(address, web3){
@@ -91,4 +98,4 @@ async function getAllTriggers() {
 
     
 }
-module.exports={getAllTriggers};
+module.exports={getAllTriggers, getTMCWallet};
