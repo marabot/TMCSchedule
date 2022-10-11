@@ -42,11 +42,11 @@ async function getAllTriggers() {
     return tabReturn;
 }
 
-async function getTMCWallet(userAddress){
+async function getTMCWalletIndex(userAddress){
     const docRef = firestore.doc(db, "accounts", userAddress);  
     const docSnap = await firestore.getDoc(docRef);
 
-    return docSnap.data().walletTMC;
+    return docSnap.data().mnemonicIndex;
 }
 
  async function getTriggerByAddrFrom(address, web3){
@@ -98,4 +98,4 @@ async function getTMCWallet(userAddress){
 
     
 }
-module.exports={getAllTriggers, getTMCWallet};
+module.exports={getAllTriggers, getTMCWalletIndex};

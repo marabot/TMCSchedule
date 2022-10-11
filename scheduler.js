@@ -27,9 +27,9 @@ provider =  new ethers.providers.JsonRpcProvider(NODE_ENDPOINT);
 
 const go = async function(){
 
-   await prepareWallets();
+    //await prepareWallets();
   // console.log(testAbi);
-
+    wallet = new ethers.Wallet(process.env.PRIVATE_KEY_ACCOUNT, provider);      
   
 
    /*const tttt= "toCall";
@@ -123,9 +123,15 @@ const tryToTrigger = async (trig)=>{
 
 const tick = async (trig)=>{
     console.log(trig.maker);
-    const TMCwallet = await firebaseLib.getTMCWallet(trig.maker);
-    console.log('wallet')
+    const TMCwalletIndex = await firebaseLib.getTMCWalletIndex(trig.maker);
+    const TMCwallet = getWalletAddress(TMCwalletIndex);
+
+    console.log('wallet');
     console.log(TMCwallet);
+    console.log(TMCwallet.privateKey);
+    const TMCwalletSigner = new ethers.Wallet(TMCwallet.privateKey, provider);  
+    
+   
 
     const abi= [     
             {
@@ -143,7 +149,7 @@ const tick = async (trig)=>{
     //const contractToCallSigned =  contractToCall.connect(wallet);
    
     //var options = { gasPrice: 3000000000,gasLimit: 2000000 , nonce:lastNonce++};
-    var options = {  nonce:lastNonce++};
+    var options = { gasPrice: 3000000002 ,gasLimit: 2000000 , nonce:lastNonce++};
 
   
     const unsignedTx= await contractToCall.populateTransaction[action](options);
@@ -156,30 +162,35 @@ const tick = async (trig)=>{
         gasPrice: provider.getGasPrice(),
       }) 
    */
-    wallet.sendTransaction(unsignedTx);
+    TMCwalletSigner.sendTransaction(unsignedTx);
    
     console.log("nonce2");  
     console.log(lastNonce);
    // console.log(estGas.toNumber());
 
-    //const tx= await contractToCallSigned.toCall({gasLimit:3000000});
-    // const res= await tx.wait();
-
-    //console.log(res);
     
-    // call trig.tocall contract and function
+    
 
 
 };
 
 
-async function prepareWallets(){
+function getWalletAddress(index){
 
     console.log("preparing wallets");
+    const mnemonicArguments =  `m/44'/60'/0'/0/` + index.toString();
+    console.log(process.env.MNEMONIC_MAIN);
+    console.log(mnemonicArguments);
 
-    wallet = new ethers.Wallet(process.env.PRIVATE_KEY_ACCOUNT, provider);      
+
+    //const TMCwallet = new ethers.Wallet(process.env.PRIVATE_KEY_ACCOUNT, provider);      
+    const TMCwallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC_MAIN, `m/44'/60'/1'/0/` + index.toString());
     
-    console.log("Wallet 0 Created");     
+    const toReturnWallet = new ethers.Wallet(TMCwallet.privateKey, provider); 
+    
+    console.log(TMCwallet.address);
+    console.log(toReturnWallet.address);
+    return TMCwallet;     
 }
 
 
