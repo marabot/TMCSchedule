@@ -6,8 +6,8 @@ const testAbi = require('./abi/TrigMyContractTest.json');
 
 let provider;
 let wallet;
-let lastNonce;
 
+let noncesTab= new Map();
 ///////////////// Escape button to stop the script ////////////////
 readline.emitKeypressEvents(process.stdin);
 if (process.stdin.isTTY)  process.stdin.setRawMode(true);
@@ -81,11 +81,29 @@ const tryToTrigger = async (trig)=>{
 
 const tick = async (trig)=>{
     
-    const TMCwalletIndex = await firebaseLib.getTMCWalletIndex(trig.maker);    
-    const TMCwallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC_MAIN, `m/44'/60'/1'/0/` + TMCwalletIndex.toString());    
-    const TMCwalletSigner = new ethers.Wallet(TMCwallet.privateKey, provider);  
-       
+    let lastNonce;
 
+    const TMCwalletIndex = await firebaseLib.getTMCWalletIndex(trig.maker);    
+    const TMCwallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC_MAIN, `m/44'/60'/1'/0/` + TMCwalletIndex.toString());   
+    const TMCwalletSigner = new ethers.Wallet(TMCwallet.privateKey, provider);  
+    
+    if (noncesTab.has(TMCwalletSigner.address)){
+      
+        lastNonce= noncesTab.get(TMCwalletSigner.address);       
+        noncesTab.set(TMCwalletSigner.address, lastNonce+1);
+        
+        console.log("nonce %");
+        console.log(lastNonce+1);  
+
+    }else{
+        lastNonce = await TMCwalletSigner.getTransactionCount();         
+        noncesTab.set(TMCwalletSigner.address, lastNonce+1);
+
+        console.log("nonce !");
+        console.log(lastNonce);  
+    }
+
+   
     const abi= [     
             {
                 "inputs": [],
@@ -96,15 +114,17 @@ const tick = async (trig)=>{
             }
         ];
     
-    console.log(abi);
+    console.log(abi);    
     const contractToCall = new ethers.Contract(trig.contractToCall, abi ,provider);
     const action = trig.functionToCall;
    
     //var options = { gasPrice: 3000000000,gasLimit: 2000000 , nonce:lastNonce++};
-    //var options = { nonce:lastNonce++};  
-  
-    const unsignedTx= await contractToCall.populateTransaction[action]();
-    console.log("unsignedTx");  
+   
+    var options = { nonce:lastNonce}; 
+    //var options = { nonce:newNonce}; 
+
+    const unsignedTx= await contractToCall.populateTransaction[action](options);   
+    console.log("unsignedTx :");  
     console.log(unsignedTx); 
     /* const estGas = await provider.estimateGas({
         from: wallet.address,
