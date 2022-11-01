@@ -72,11 +72,13 @@ async function getTMCWalletIndex(userAddress){
     return tabReturn;
 }
 
- async function switchTriggerState(id, newValue){
+
+
+async function UpdateLastTick(id, newValue){
     // Add a new document in collection "cities"
-    const docRef = doc(db, "users", id);
-    const result = await updateDoc(docRef, {
-        inWork : newValue
+    const docRef = firestore.doc(db, "triggers", id);
+    const result = await firestore.updateDoc(docRef, {
+        lastTick : newValue
     });
    return result;
 }
@@ -98,4 +100,4 @@ async function getTMCWalletIndex(userAddress){
 
     
 }
-module.exports={getAllTriggers, getTMCWalletIndex};
+module.exports={getAllTriggers, getTMCWalletIndex, UpdateLastTick};

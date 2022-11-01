@@ -29,11 +29,16 @@ const go = async function(){
 
     wallet = new ethers.Wallet(process.env.PRIVATE_KEY_ACCOUNT, provider);  
     
-    const allTrigs = await firebaseLib.getAllTriggers();
+    setInterval(async()=>{    
+        const allTrigs = await firebaseLib.getAllTriggers();
 
-    for(let i=0;i< allTrigs.length; i++){
-       await tryToTrigger(allTrigs[i]);
-    }    
+        for(let i=0;i< allTrigs.length; i++){
+            console.log("tryy !!! ");
+           await tryToTrigger(allTrigs[i]);
+        }    
+    }, 10*1000 );   
+
+    
 }
 
 go();
@@ -42,23 +47,25 @@ const tryToTrigger = async (trig)=>{
         // next trig<now
         let intervalTimeStamp;
         switch(trig.interval){
-            case "every minute":
-                intervalTimeStamp = 60;
-                
+            case "minute":
+                intervalTimeStamp = 60*1000;
+                break;
+
             case "hourly":
-                intervalTimeStamp = 3600;
+                intervalTimeStamp = 3600*1000;
                 break;
 
             case "daily":
-                intervalTimeStamp = 3600*12;
+                intervalTimeStamp = 3600*12*1000;
                 break;
 
             case "weekly":
-                intervalTimeStamp = 3600*12*7;
+                intervalTimeStamp = 3600*12*7*1000;
                 break;
             
             case "monthly":
-                intervalTimeStamp = 3600*12*30;
+                //TODO : extract day index  and trigger comparing day index
+                intervalTimeStamp = 3600*12*30*100;
                 break;
 
             default:
@@ -67,11 +74,14 @@ const tryToTrigger = async (trig)=>{
 
         const nextTick = trig.lastTick + intervalTimeStamp;
 
-        /*
+      
         console.log("next + date.now");
-        console.log(nextTick);
-        console.log (Date.now());
-       */
+        console.log(trig.interval);
+        
+        console.log(trig.lastTick);
+        console.log(intervalTimeStamp);        
+        console.log("nextTick : " + nextTick);
+        console.log("now      : " + Date.now());
 
         if ( nextTick < Date.now() || trig.lastTick == 0 ){
            
@@ -134,6 +144,7 @@ const tick = async (trig)=>{
       }) 
    */
     //  wallet.sendTransaction(unsignedTx);
+    firebaseLib.UpdateLastTick(trig.id,Date.now());
     TMCwalletSigner.sendTransaction(unsignedTx).then(function(receipt){
         console.log(receipt);
 
