@@ -44,46 +44,19 @@ const go = async function(){
 go();
 
 const tryToTrigger = async (trig)=>{
-        // next trig<now
-        let intervalTimeStamp;
-        switch(trig.interval){
-            case "minute":
-                intervalTimeStamp = 60*1000;
-                break;
+       
 
-            case "hourly":
-                intervalTimeStamp = 3600*1000;
-                break;
-
-            case "daily":
-                intervalTimeStamp = 3600*12*1000;
-                break;
-
-            case "weekly":
-                intervalTimeStamp = 3600*12*7*1000;
-                break;
-            
-            case "monthly":
-                //TODO : extract day index  and trigger comparing day index
-                intervalTimeStamp = 3600*12*30*100;
-                break;
-
-            default:
-                break;
-        }
-
-        const nextTick = trig.lastTick + intervalTimeStamp;
+        const nextTick = trig.lastTick + trig.interval;
 
       
         console.log("next + date.now");
-        console.log(trig.interval);
-        
+        console.log(trig.interval);        
         console.log(trig.lastTick);
-        console.log(intervalTimeStamp);        
+       
         console.log("nextTick : " + nextTick);
-        console.log("now      : " + Date.now());
+        console.log("now      : " + Date.now()/1000);
 
-        if ( nextTick < Date.now() || trig.lastTick == 0 ){
+        if ( nextTick < Date.now()/1000 || trig.lastTick == 0 ){
            
             await tick(trig);           
         }
@@ -144,7 +117,7 @@ const tick = async (trig)=>{
       }) 
    */
     //  wallet.sendTransaction(unsignedTx);
-    firebaseLib.UpdateLastTick(trig.id,Date.now());
+    firebaseLib.UpdateLastTick(trig.id,Date.now()/1000);
     TMCwalletSigner.sendTransaction(unsignedTx).then(function(receipt){
         console.log(receipt);
 
