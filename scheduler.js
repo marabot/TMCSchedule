@@ -43,11 +43,10 @@ const go = async function(){
 
 go();
 
-const tryToTrigger = async (trig)=>{
-       
+
+const tryToTrigger = async (trig)=>{       
 
         const nextTick = trig.lastTick + trig.interval;
-
       
         console.log("next + date.now");
         console.log(trig.interval);        
@@ -120,7 +119,7 @@ const tick = async (trig)=>{
     firebaseLib.UpdateLastTick(trig.id,Date.now()/1000);
     TMCwalletSigner.sendTransaction(unsignedTx).then(function(receipt){
         console.log(receipt);
-
+        firebaseLib.addCallToDB(trig.id, Date.now()/1000, receipt.hash);
     });
    /*
     console.log("nonce2");  

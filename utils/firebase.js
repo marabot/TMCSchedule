@@ -83,21 +83,20 @@ async function UpdateLastTick(id, newValue){
    return result;
 }
 
- async function addToDB(userAddr, contractAdd, functionToCall, interval){
+
+
+
+async function addCallToDB(triggerId, timeStamp, txHash){
     try {
-    const docRef = await addDoc(collection(db, "users"), {
-        maker: userAddr,
-        contractToCall : contractAdd,
-        functionToCall :functionToCall,
-        interval : interval, 
-        inWork: false,
-        lastTick : 0
+    const docRef = await firestore.addDoc(firestore.collection(db, "calls"), {
+        triggerId:triggerId,
+        time: timeStamp,
+        txHash : txHash
     });
     console.log("Document written with ID: ", docRef.id);
     } catch (e) {
     console.error("Error adding document: ", e);
     }
-
-    
 }
-module.exports={getAllTriggers, getTMCWalletIndex, UpdateLastTick};
+
+module.exports={getAllTriggers, getTMCWalletIndex, UpdateLastTick, addCallToDB};
