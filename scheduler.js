@@ -36,7 +36,7 @@ const go = async function(){
             console.log("tryy !!! ");
            await tryToTrigger(allTrigs[i]);
         }    
-    }, 10*1000 );   
+   }, 10*1000 );   
 
     
 }
@@ -47,15 +47,15 @@ go();
 const tryToTrigger = async (trig)=>{       
 
         const nextTick = trig.lastTick + trig.interval;
-      
+      /*
         console.log("next + date.now");
         console.log(trig.interval);        
         console.log(trig.lastTick);
        
         console.log("nextTick : " + nextTick);
         console.log("now      : " + Date.now()/1000);
-
-        if ( nextTick < Date.now()/1000 || trig.lastTick == 0 ){
+*/
+        if ( (nextTick < Date.now()/1000 || trig.lastTick === 0) && trig.inWork ===true){
            
             await tick(trig);           
         }
@@ -85,10 +85,19 @@ const tick = async (trig)=>{
         console.log(lastNonce);  
     }
 
-   
+    const parValues =  parseParams(trig.paramsValues);
+    const parTypes =  parseParams(trig.paramsTypes);
+
+    let params = [];
+    for (let i =0;i<parTypes.length;i++){
+       params.push({"type":parTypes[i],"name": "param"  + i});
+    };   
+   console.log(params);
+  
+
     const abi= [     
             {
-                "inputs": [],
+                "inputs": params,
                 "name": trig.functionToCall,
                 "outputs": [],
                 "stateMutability": "payable",
@@ -96,16 +105,36 @@ const tick = async (trig)=>{
             }
         ];
     
-    console.log(abi);    
+    
     const contractToCall = new ethers.Contract(trig.contractToCall, abi ,provider);
     const action = trig.functionToCall;
+        
+    var options = { gasPrice: 3000000000,gasLimit: 2000000 , nonce:lastNonce};
    
-    //var options = { gasPrice: 3000000000,gasLimit: 2000000 , nonce:lastNonce++};
-   
-    var options = { nonce:lastNonce}; 
+    //var options = { nonce:lastNonce}; 
     //var options = { nonce:newNonce}; 
+    const paramsValue = ["1", "gbigbuhhhg"];
+    
+    let unsignedTx;
+    switch (parValues.length){
+            case 1:
+                
+                unsignedTx= await contractToCall.populateTransaction[action](parValues[0],options);  
+                break;
+            case 2:
+                
+                unsignedTx= await contractToCall.populateTransaction[action](parValues[0],parValues[1],options);  
+                break
+            case 3:
+                
+                unsignedTx= await contractToCall.populateTransaction[action](parValues[0],parValues[1],parValues[2],options);  
+                break;
 
-    const unsignedTx= await contractToCall.populateTransaction[action](options);   
+            default:
+                unsignedTx= await contractToCall.populateTransaction[action](options);  
+                break;
+    }
+
     console.log("unsignedTx :");  
     console.log(unsignedTx); 
     /* const estGas = await provider.estimateGas({
@@ -128,3 +157,14 @@ const tick = async (trig)=>{
    // console.log(estGas.toNumber());
 
 };
+
+function  parseParams(params){
+   
+    const ret = [];
+
+    params.split(';').map((e)=>{
+        if (e!="") ret.push(e);
+    });
+
+    return ret;
+}

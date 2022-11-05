@@ -30,12 +30,18 @@ async function getAllTriggers() {
             tabReturn.push(            
                     new Trigger(
                         doc.id,
+                        datas.label,
                         datas.maker,
+                        datas.chain,
                         datas.contractToCall,
                         datas.functionToCall,
+                        datas.paramValues,
+                        datas.paramTypes,
                         datas.interval,
                         datas.inWork,
-                        datas.lastTick
+                        datas.lastTick,
+                        datas.deleted, 
+                        datas.createTime
                         )
             );   
         });    
@@ -47,29 +53,6 @@ async function getTMCWalletIndex(userAddress){
     const docSnap = await firestore.getDoc(docRef);
 
     return docSnap.data().mnemonicIndex;
-}
-
- async function getTriggerByAddrFrom(address, web3){
-   const tabReturn = [];
-    const docs = await getDocs(collection(db, "users"));    
-
-    docs.forEach((doc) => {
-        const datas= doc.data();     
-      
-        if (datas.FromAddress == web3)
-
-        tabReturn.push(
-            Trigger(
-                    datas.maker,
-                    datas.contractToCall,
-                    datas.functionToCall,
-                    datas.interval,
-                    datas.inWork,
-                    datas.lastTick
-                    )
-        );   
-    });    
-    return tabReturn;
 }
 
 
