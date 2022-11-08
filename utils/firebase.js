@@ -56,7 +56,6 @@ async function getTMCWalletIndex(userAddress){
 }
 
 
-
 async function UpdateLastTick(id, newValue){
     // Add a new document in collection "cities"
     const docRef = firestore.doc(db, "triggers", id);
@@ -67,11 +66,11 @@ async function UpdateLastTick(id, newValue){
 }
 
 
-
-
 async function addCallToDB(triggerId, timeStamp, txHash){
+    
+    let docRef;
     try {
-    const docRef = await firestore.addDoc(firestore.collection(db, "calls"), {
+        docRef = await firestore.addDoc(firestore.collection(db, "calls"), {
         triggerId:triggerId,
         time: timeStamp,
         txHash : txHash
@@ -80,6 +79,24 @@ async function addCallToDB(triggerId, timeStamp, txHash){
     } catch (e) {
     console.error("Error adding document: ", e);
     }
+    return docRef.id;
 }
 
-module.exports={getAllTriggers, getTMCWalletIndex, UpdateLastTick, addCallToDB};
+async function addCallResultToDB(callId, fees, gasUsed, status){
+    
+    let docRef;
+    try {
+        docRef = await firestore.addDoc(firestore.collection(db, "callResults"), {
+        callId:callId,
+        fees: fees,
+        gasUsed : gasUsed,
+        status :status
+    });
+    console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+    console.error("Error adding document: ", e);
+    }
+    return docRef.id;
+}
+
+module.exports={getAllTriggers, getTMCWalletIndex, UpdateLastTick, addCallToDB,addCallResultToDB};

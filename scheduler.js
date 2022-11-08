@@ -36,9 +36,7 @@ const go = async function(){
             console.log("tryy !!! ");
            await tryToTrigger(allTrigs[i]);
         }    
-   }, 10*1000 );   
-
-    
+   }, 10*1000 ); 
 }
 
 go();
@@ -47,16 +45,8 @@ go();
 const tryToTrigger = async (trig)=>{       
 
         const nextTick = trig.lastTick + trig.interval;
-      /*
-        console.log("next + date.now");
-        console.log(trig.interval);        
-        console.log(trig.lastTick);
-       
-        console.log("nextTick : " + nextTick);
-        console.log("now      : " + Date.now()/1000);
-*/
-        if ( (nextTick < Date.now()/1000 || trig.lastTick === 0) && trig.inWork ===true){
-           
+    
+        if ( (nextTick < Date.now()/1000 || trig.lastTick === 0) && trig.inWork ===true){           
             await tick(trig);           
         }
 };
@@ -109,7 +99,7 @@ const tick = async (trig)=>{
     const contractToCall = new ethers.Contract(trig.contractToCall, abi ,provider);
     const action = trig.functionToCall;
         
-    var options = { gasPrice: 3000000000,gasLimit: 2000000 , nonce:lastNonce};
+    var options = { gasPrice: 90000000000,gasLimit: 5000000 , nonce:lastNonce};
    
     //var options = { nonce:lastNonce}; 
     //var options = { nonce:newNonce}; 
@@ -117,16 +107,16 @@ const tick = async (trig)=>{
     
     let unsignedTx;
     switch (parValues.length){
+
             case 1:
-                
                 unsignedTx= await contractToCall.populateTransaction[action](parValues[0],options);  
                 break;
-            case 2:
-                
+
+            case 2:          
                 unsignedTx= await contractToCall.populateTransaction[action](parValues[0],parValues[1],options);  
                 break
+
             case 3:
-                
                 unsignedTx= await contractToCall.populateTransaction[action](parValues[0],parValues[1],parValues[2],options);  
                 break;
 
@@ -137,25 +127,22 @@ const tick = async (trig)=>{
 
     console.log("unsignedTx :");  
     console.log(unsignedTx); 
-    /* const estGas = await provider.estimateGas({
-        from: wallet.address,
-        to: unsignedTx.to,
-        data: unsignedTx.data,
-        gasPrice: provider.getGasPrice(),
-      }) 
-   */
-    //  wallet.sendTransaction(unsignedTx);
+   
     firebaseLib.UpdateLastTick(trig.id,Date.now()/1000);
-    TMCwalletSigner.sendTransaction(unsignedTx).then(function(receipt){
-        console.log(receipt);
-        firebaseLib.addCallToDB(trig.id, Date.now()/1000, receipt.hash);
-    });
-   /*
-    console.log("nonce2");  
-    console.log(lastNonce);
-    */
-   // console.log(estGas.toNumber());
 
+    let tx;
+    let callDBId;
+    await TMCwalletSigner.sendTransaction(unsignedTx).then(function(receipt){
+        console.log(receipt);
+        tx=receipt;  
+    });
+
+    callDBId = await firebaseLib.addCallToDB(trig.id, Date.now()/1000, tx.hash);    
+    console.log("call id");
+    console.log(callDBId);
+
+    const res = await tx.wait();
+    await firebaseLib.addCallResultToDB(callDBId, res.effectiveGasPrice*res.gasUsed,res.gasUsed.toNumber(), res.status);   
 };
 
 function  parseParams(params){
